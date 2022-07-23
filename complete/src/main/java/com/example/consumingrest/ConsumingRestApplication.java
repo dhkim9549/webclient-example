@@ -1,5 +1,7 @@
 package com.example.consumingrest;
 
+import java.net.URLEncoder;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -13,29 +15,29 @@ import org.springframework.web.client.RestTemplate;
 import reactor.core.publisher.Mono;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.http.MediaType;
+import reactor.core.publisher.Flux;
 
 @SpringBootApplication
-public class ConsumingRestApplication {
+public class ConsumingRestApplication implements CommandLineRunner {
 
 	private static final Logger log = LoggerFactory.getLogger(ConsumingRestApplication.class);
 
 	public static void main(String[] args) {
+		log.info("main() start...");
+		for(String arg : args) {
+			log.info("arg = " + arg);
+		}
 		SpringApplication.run(ConsumingRestApplication.class, args);
+		log.info("main() end...");
 	}
 
-	@Bean
-	public RestTemplate restTemplate123(RestTemplateBuilder builder) {
-		log.info("restTemplate123() start...");
-		return builder.build();
-	}
-
-	@Bean
-	public CommandLineRunner run(RestTemplate restTemplate) throws Exception {
+	public void run(String... args) throws Exception {
 		log.info("run() start...");
-		return args -> {
-			// restT(restTemplate);
-			webClientT2();
-		};
+		for(String arg : args) {
+			log.info(">>> arg = " + arg);
+		}
+		// restT(restTemplate);
+		webClientT2();
 	}
 
 	public void restT(RestTemplate restTemplate) {
@@ -82,8 +84,18 @@ public class ConsumingRestApplication {
                 WebClient client = WebClient.builder()
                         .baseUrl("http://bada.ai")
                         .build();
-		for(int i = 0; i < 100; i++) {
-                	client.get().uri("/siseapi/sise/addr?lwdgCd=11650107&srchDvcd=1&srchVal=빌")
+
+		String urlBuilder = new String("/siseapi/sise/addr");
+		urlBuilder = urlBuilder.concat("?" + "lwdgCd" + "=" + "11650107");
+		urlBuilder = urlBuilder.concat("&" + "srchDvcd" + "=" + "1");
+		urlBuilder = urlBuilder.concat("&" + "srchVal" + "=" + "빌");
+
+		log.info("urlBuilder = " + urlBuilder);
+
+		for(int i = 0; i < 20; i++) {
+                	client.get()
+				.uri(urlBuilder)
+				.accept(MediaType.APPLICATION_JSON)
                         	.retrieve()
 				.bodyToMono(Iterable.class)
 				.subscribe(addrArr -> {
@@ -94,6 +106,11 @@ public class ConsumingRestApplication {
 					log.info("addrLst.size() = " + addrLst.size());
 				});
 		}
+
+		Flux.interval(Duration.ofSeconds(1))
+			.subscribe(num -> {
+				log.info("num = " + num);
+			});
 
 		log.info("webClientT2() end...");
         }
