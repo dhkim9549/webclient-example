@@ -37,7 +37,8 @@ public class ConsumingRestApplication implements CommandLineRunner {
 			log.info(">>> arg = " + arg);
 		}
 		// restT(restTemplate);
-		webClientT2();
+		// webClientT2();
+		webFlux();
 	}
 
 	public void restT(RestTemplate restTemplate) {
@@ -114,4 +115,49 @@ public class ConsumingRestApplication implements CommandLineRunner {
 
 		log.info("webClientT2() end...");
         }
+
+	public void webFlux() {
+
+		Flux.interval(Duration.ofSeconds(600))
+                        .subscribe(num -> {
+                                log.info("ansin num = " + num);
+				checkSise("https://ansim.hf.go.kr");
+                        });
+
+		Flux.interval(Duration.ofSeconds(600))
+                        .subscribe(num -> {
+                                log.info("bada num = " + num);
+                                checkSise("http://bada.ai");
+                        });
+
+	}
+
+	WebClient client = null;
+
+	public void checkSise(String baseUrl) {
+
+		if(client == null) {
+			client = WebClient.builder()
+                        	.baseUrl(baseUrl)
+                        	.build();
+		}
+
+		String urlBuilder = new String("/siseapi/sise/addr3");
+                urlBuilder = urlBuilder.concat("?" + "lwdgCd" + "=" + "26290106");
+                urlBuilder = urlBuilder.concat("&" + "ltnoBno" + "=" + "1858");
+                urlBuilder = urlBuilder.concat("&" + "ltnoBuno" + "=" + "");
+
+                log.info("urlBuilder = " + urlBuilder);
+
+		client.get()
+			.uri(urlBuilder)
+			.accept(MediaType.APPLICATION_JSON)
+			.retrieve()
+			.bodyToMono(Iterable.class)
+			.subscribe(addrArr -> {
+				for(Object addr : addrArr) {
+					log.info("addr = " + addr);
+				}
+		});
+	}
 }
